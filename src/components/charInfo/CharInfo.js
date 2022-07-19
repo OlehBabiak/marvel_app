@@ -1,61 +1,116 @@
-import './charInfo.scss';
-import thor from '../../resources/img/thor.jpeg';
+import "./charInfo.scss";
+import MarvelService from "../../services/MarvelService";
+import { useState, useEffect } from "react";
+import ErrorMessage from "../errorMessage/ErrorMessage";
+import Spinner from "../spinner/Spinner";
+import Skeleton from "../skeleton/Skeleton";
 
-const CharInfo = () => {
+const CharInfo = ({ selectedCharId }) => {
+  const [characterInfo, setCharacterInfo] = useState(null);
+  const [characterComics, setCharacterComics] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const content = !(loading || error || !characterInfo) ? (
+    <View char={characterInfo} characterComics={characterComics} />
+  ) : null;
+  const errorMessage = error ? <ErrorMessage /> : null;
+  const spinner = loading ? <Spinner /> : null;
+  const skeleton = error || !selectedCharId ? <Skeleton /> : null;
+  const marvelService = new MarvelService();
+
+  function loadChars() {
+    if (!selectedCharId) {
+      return;
+    }
+    onCharLoading();
+    marvelService
+      .getCharacter(selectedCharId)
+      .then(onCharLoaded)
+      .catch(onError);
+  }
+
+  function onCharLoaded(char) {
+    setCharacterInfo(char);
+    setCharacterComics(char.comics);
+    setLoading(false);
+
+    onback.app = 0;
+  }
+
+  function onCharLoading() {
+    setLoading(true);
+  }
+
+  function onError() {
+    setLoading(false);
+    setError(true);
+  }
+
+  useEffect(() => {
+    loadChars();
+  }, [selectedCharId]);
+
+  return (
+    <div className="char__info">
+      {skeleton}
+      {errorMessage}
+      {spinner}
+      {content}
+    </div>
+  );
+};
+
+const View = ({ char, characterComics }) => {
+  const { name, description, thumbnail } = char;
+  let imgStyle = { objectFit: "cover" };
+  if (
+    thumbnail ===
+    "http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available.jpg"
+  ) {
+    imgStyle = { objectFit: "contain" };
+  }
+
+  const initDescValue = "No any description";
+  const character = renderComics(characterComics);
+
+  function renderComics(arr) {
+    const items = arr.splice(0, 10).map((item, i) => {
+      return (
+        <li className="char__comics-item" key={i}>
+          {item.name}
+        </li>
+      );
+    });
     return (
-        <div className="char__info">
-            <div className="char__basics">
-                <img src={thor} alt="abyss"/>
-                <div>
-                    <div className="char__info-name">thor</div>
-                    <div className="char__btns">
-                        <a href="#" className="button button__main">
-                            <div className="inner">homepage</div>
-                        </a>
-                        <a href="#" className="button button__secondary">
-                            <div className="inner">Wiki</div>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div className="char__descr">
-                In Norse mythology, Loki is a god or jötunn (or both). Loki is the son of Fárbauti and Laufey, and the brother of Helblindi and Býleistr. By the jötunn Angrboða, Loki is the father of Hel, the wolf Fenrir, and the world serpent Jörmungandr. By Sigyn, Loki is the father of Nari and/or Narfi and with the stallion Svaðilfari as the father, Loki gave birth—in the form of a mare—to the eight-legged horse Sleipnir. In addition, Loki is referred to as the father of Váli in the Prose Edda.
-            </div>
-            <div className="char__comics">Comics:</div>
-            <ul className="char__comics-list">
-                <li className="char__comics-item">
-                    All-Winners Squad: Band of Heroes (2011) #3
-                </li>
-                <li className="char__comics-item">
-                    Alpha Flight (1983) #50
-                </li>
-                <li className="char__comics-item">
-                    Amazing Spider-Man (1999) #503
-                </li>
-                <li className="char__comics-item">
-                    Amazing Spider-Man (1999) #504
-                </li>
-                <li className="char__comics-item">
-                    AMAZING SPIDER-MAN VOL. 7: BOOK OF EZEKIEL TPB (Trade Paperback)
-                </li>
-                <li className="char__comics-item">
-                    Amazing-Spider-Man: Worldwide Vol. 8 (Trade Paperback)
-                </li>
-                <li className="char__comics-item">
-                    Asgardians Of The Galaxy Vol. 2: War Of The Realms (Trade Paperback)
-                </li>
-                <li className="char__comics-item">
-                    Vengeance (2011) #4
-                </li>
-                <li className="char__comics-item">
-                    Avengers (1963) #1
-                </li>
-                <li className="char__comics-item">
-                    Avengers (1996) #1
-                </li>
-            </ul>
+      <ul className="char__comics-list">
+        {items.length === 0 ? "No any comics" : items}
+      </ul>
+    );
+  }
+
+  return (
+    <>
+      <div className="char__basics">
+        <img src={thumbnail} alt="abyss" style={imgStyle} />
+        <div>
+          <div className="char__info-name">{name}</div>
+          <div className="char__btns">
+            <a href="#" className="button button__main">
+              <div className="inner">homepage</div>
+            </a>
+            <a href="#" className="button button__secondary">
+              <div className="inner">Wiki</div>
+            </a>
+          </div>
         </div>
-    )
-}
+      </div>
+      <div className="char__descr">
+        {description ? description : initDescValue}
+      </div>
+      <div className="char__comics">Comics:</div>
+      {character}
+    </>
+  );
+};
 
 export default CharInfo;

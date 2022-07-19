@@ -11,10 +11,11 @@ class MarvelService {
     return await res.json();
   };
 
-  getAllCharacters = () => {
-    return this.getResource(
+  getAllCharacters = async () => {
+    const res = await this.getResource(
       `${this._apiBase}characters?limit=9&offset=210&${this._apiKey}`
     );
+    return res.data.results.map(this._transformCharacter);
   };
 
   getCharacter = async (id) => {
@@ -25,12 +26,15 @@ class MarvelService {
   };
 
   _transformCharacter = (char) => {
+    //отрримуєм обєкт тільки з потрібними полями
     return {
       name: char.name,
+      comics: char.comics.items,
       description: char.description,
       thumbnail: `${char.thumbnail.path}.${char.thumbnail.extension}`,
       homepage: char.resourceURI,
       wiki: char.urls[1].url,
+      id: char.id,
     };
   };
 }
