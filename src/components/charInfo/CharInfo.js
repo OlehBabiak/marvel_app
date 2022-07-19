@@ -33,8 +33,6 @@ const CharInfo = ({ selectedCharId }) => {
     setCharacterInfo(char);
     setCharacterComics(char.comics);
     setLoading(false);
-
-    onback.app = 0;
   }
 
   function onCharLoading() {
